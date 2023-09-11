@@ -80,6 +80,7 @@ export class TypebotService {
       unknown_message: findData.unknown_message,
       listening_from_me: findData.listening_from_me,
       sessions: findData.sessions,
+      remarketing: findData.remarketing
     };
 
     this.create(instance, typebotData);
@@ -221,6 +222,7 @@ export class TypebotService {
         unknown_message: data.unknown_message,
         listening_from_me: data.listening_from_me,
         sessions: data.sessions,
+        remarketing: data.remarketing
       };
 
       this.create(instance, typebotData);
@@ -379,8 +381,6 @@ export class TypebotService {
   }
 
   public async sendTypebot(instance: InstanceDto, remoteJid: string, msg: MessageRaw) {
-
-
     if (remoteJid.includes("@g.us")) return;
 
     const findTypebot = await this.find(instance);
@@ -403,7 +403,9 @@ export class TypebotService {
       const diffInMinutes = Math.floor(diff / 1000 / 60);
 
       if (diffInMinutes > expire) {
+
         sessions.splice(sessions.indexOf(session), 1);
+
         const data = await this.createNewSession(instance, {
           url: url,
           typebot: typebot,
@@ -415,11 +417,14 @@ export class TypebotService {
           sessions: sessions,
           remoteJid: remoteJid,
           pushName: msg.pushName,
+          remarketing: remarketing
         });
+
         await this.sendWAMessage(instance, remoteJid, data.messages, data.input, data.clientSideActions);
         return;
       }
     }
+    console.log(remarketing)
 
     if (remarketing) {
       let interagiu = false;
@@ -428,16 +433,20 @@ export class TypebotService {
       const remarketingTimeOutMinutes = findTypebot
         .remarketing.map(remarketing => DateUtils.minuteToMillis(remarketing.timeout_minutes));
 
-      const taskRemarketing = cron.schedule('*/5 * * * * *', async () => {
+      const taskRemarketing = cron.schedule('*/10 * * * * *', async () => {
+
         console.log('cron executando')
-        console.log("sessio: " + interagiu)
+        console.log("session: " + interagiu)
         console.log("session_status: " + session.status)
+        console.log("interagiu ?: " + interagiu)
+
         if (session && session.status === 'opened' && !interagiu) {
           if (remarketingContador < remarketingTimeOutMinutes.length && session.updateAt + remarketingTimeOutMinutes[remarketingContador] < Date.now()) {
             console.log(`remarketing ${remarketingContador + 1}`);
             await this.sendRemarketing(instance, remoteJid, remarketing[remarketingContador], findTypebot);
             remarketingContador++;
           } else if (remarketingContador === remarketingTimeOutMinutes.length) {
+            console.log('pausando instancia')
             taskRemarketing.stop();
             this.changeStatus(instance, { remoteJid, status: 'paused' });
           }
@@ -463,6 +472,7 @@ export class TypebotService {
         sessions: sessions,
         remoteJid: remoteJid,
         pushName: msg.pushName,
+        remarketing: remarketing
       });
       await this.sendWAMessage(instance, remoteJid, data.messages, data.input, data.clientSideActions);
       return;
