@@ -25,6 +25,9 @@ export class TypebotRepository extends Repository {
       }
 
       this.logger.verbose('saving typebot to store');
+      console.log(data)
+      console.log()
+     
 
       this.writeStore<TypebotRaw>({
         path: join(this.storePath, 'typebot'),
@@ -33,7 +36,6 @@ export class TypebotRepository extends Repository {
       });
 
       this.logger.verbose('typebot saved to store in path: ' + join(this.storePath, 'typebot') + '/' + instance);
-
       this.logger.verbose('typebot created');
       return { insertCount: 1 };
     } catch (error) {
@@ -61,6 +63,7 @@ export class TypebotRepository extends Repository {
         url: '',
         typebot: '',
         expire: 0,
+        remarketing: [],
         sessions: [],
       };
     }
