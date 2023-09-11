@@ -2,13 +2,15 @@ import axios from 'axios';
 
 import { Logger } from '../../config/logger.config';
 import { InstanceDto } from '../dto/instance.dto';
-import { Session, TypebotDto } from '../dto/typebot.dto';
+import { MessageRemarketing, Session, TypebotDto } from '../dto/typebot.dto';
 import { MessageRaw } from '../models';
 import { Events } from '../types/wa.types';
 import { WAMonitoringService } from './monitor.service';
+import cron from 'node-cron'
+import { DateUtils } from '../../utils/date';
 
 export class TypebotService {
-  constructor(private readonly waMonitor: WAMonitoringService) {}
+  constructor(private readonly waMonitor: WAMonitoringService) { }
 
   private readonly logger = new Logger(TypebotService.name);
 
@@ -37,9 +39,7 @@ export class TypebotService {
   public async changeStatus(instance: InstanceDto, data: any) {
     const remoteJid = data.remoteJid;
     const status = data.status;
-
     const findData = await this.find(instance);
-
     const session = findData.sessions.find((session) => session.remoteJid === remoteJid);
 
     if (session) {
@@ -379,28 +379,31 @@ export class TypebotService {
   }
 
   public async sendTypebot(instance: InstanceDto, remoteJid: string, msg: MessageRaw) {
+
+
+    if (remoteJid.includes("@g.us")) return;
+
     const findTypebot = await this.find(instance);
     const url = findTypebot.url;
     const typebot = findTypebot.typebot;
     const sessions = (findTypebot.sessions as Session[]) ?? [];
     const expire = findTypebot.expire;
+    //  UNDEFINED APÓS REINICIAR API
+    const remarketing = findTypebot.remarketing;
     const keyword_finish = findTypebot.keyword_finish;
     const delay_message = findTypebot.delay_message;
     const unknown_message = findTypebot.unknown_message;
     const listening_from_me = findTypebot.listening_from_me;
-
     const session = sessions.find((session) => session.remoteJid === remoteJid);
 
     if (session && expire && expire > 0) {
+
       const now = Date.now();
-
       const diff = now - session.updateAt;
-
       const diffInMinutes = Math.floor(diff / 1000 / 60);
 
       if (diffInMinutes > expire) {
         sessions.splice(sessions.indexOf(session), 1);
-
         const data = await this.createNewSession(instance, {
           url: url,
           typebot: typebot,
@@ -413,12 +416,36 @@ export class TypebotService {
           remoteJid: remoteJid,
           pushName: msg.pushName,
         });
-
         await this.sendWAMessage(instance, remoteJid, data.messages, data.input, data.clientSideActions);
-
         return;
       }
     }
+
+    if (remarketing) {
+      let interagiu = false;
+      let remarketingContador = 0;
+
+      const remarketingTimeOutMinutes = findTypebot
+        .remarketing.map(remarketing => DateUtils.minuteToMillis(remarketing.timeout_minutes));
+
+      const taskRemarketing = cron.schedule('*/5 * * * * *', async () => {
+        console.log('cron executando')
+        console.log("sessio: " + interagiu)
+        console.log("session_status: " + session.status)
+        if (session && session.status === 'opened' && !interagiu) {
+          if (remarketingContador < remarketingTimeOutMinutes.length && session.updateAt + remarketingTimeOutMinutes[remarketingContador] < Date.now()) {
+            console.log(`remarketing ${remarketingContador + 1}`);
+            await this.sendRemarketing(instance, remoteJid, remarketing[remarketingContador], findTypebot);
+            remarketingContador++;
+          } else if (remarketingContador === remarketingTimeOutMinutes.length) {
+            taskRemarketing.stop();
+            this.changeStatus(instance, { remoteJid, status: 'paused' });
+          }
+        }
+      });
+      taskRemarketing.start();
+    }
+
 
     if (session && session.status !== 'opened') {
       return;
@@ -437,9 +464,7 @@ export class TypebotService {
         remoteJid: remoteJid,
         pushName: msg.pushName,
       });
-
       await this.sendWAMessage(instance, remoteJid, data.messages, data.input, data.clientSideActions);
-
       return;
     }
 
@@ -495,9 +520,7 @@ export class TypebotService {
         listening_from_me: listening_from_me,
         sessions,
       };
-
       this.create(instance, typebotData);
-
       return;
     }
 
@@ -518,4 +541,44 @@ export class TypebotService {
 
     return;
   }
+
+
+  async sendRemarketing(instance: InstanceDto, remoteJid: string, remarketing: MessageRemarketing, typebot: TypebotDto) {
+    if (remarketing.type === "audio") {
+      await this.waMonitor.waInstances[instance.instanceName].mediaMessage({
+        number: remoteJid.split('@')[0],
+        options: {
+          delay: typebot.delay_message || 1000,
+          presence: 'composing',
+        },
+        mediaMessage: {
+          mediatype: 'audio',
+          media: remarketing.content,
+        },
+      });
+    } else if (remarketing.type === "image") {
+      await this.waMonitor.waInstances[instance.instanceName].mediaMessage({
+        number: remoteJid.split('@')[0],
+        options: {
+          delay: typebot.delay_message || 1000,
+          presence: 'composing',
+        },
+        mediaMessage: {
+          mediatype: 'image',
+          media: remarketing.content,
+        },
+      });
+    } else if (remarketing.type === "text") {
+      await this.waMonitor.waInstances[instance.instanceName].textMessage({
+        number: remoteJid.split('@')[0],
+        options: {
+          delay: typebot.delay_message || 2000,
+          presence: 'composing',
+        },
+        textMessage: {
+          text: remarketing.content,
+        },
+      });
+    }
+  };
 }
