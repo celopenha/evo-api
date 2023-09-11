@@ -11,10 +11,16 @@ export class TypebotDto {
   url: string;
   typebot?: string;
   expire?: number;
-  remarketing?: number[];
+  remarketing?: MessageRemarketing[];
   keyword_finish?: string;
   delay_message?: number;
   unknown_message?: string;
   listening_from_me?: boolean;
   sessions?: Session[];
+}
+
+export type MessageRemarketing = {
+  timeout_minutes: number;
+  type: string;
+  content: string;
 }
