@@ -1,6 +1,7 @@
 import { Schema } from 'mongoose';
 
 import { dbserver } from '../../libs/db.connect';
+import { MessageRemarketing } from '../dto/typebot.dto';
 
 class Session {
   remoteJid?: string;
@@ -16,6 +17,7 @@ export class TypebotRaw {
   url: string;
   typebot?: string;
   expire?: number;
+  remarketing?: MessageRemarketing[]
   keyword_finish?: string;
   delay_message?: number;
   unknown_message?: string;
@@ -29,6 +31,11 @@ const typebotSchema = new Schema<TypebotRaw>({
   url: { type: String, required: true },
   typebot: { type: String, required: true },
   expire: { type: Number, required: true },
+  remarketing: [{
+    timeout_minutes: { type: Number, required: true },
+    type: { type: String, required: true },
+    content: { type: String, required: true }
+  }],
   keyword_finish: { type: String, required: true },
   delay_message: { type: Number, required: true },
   unknown_message: { type: String, required: true },
