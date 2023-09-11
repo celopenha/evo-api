@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 import { AuthenticationState, WAConnectionState } from '@whiskeysockets/baileys';
+import { MessageRemarketing } from '../dto/typebot.dto';
 
 export enum Events {
   APPLICATION_STARTUP = 'application.startup',
@@ -99,6 +100,7 @@ export declare namespace wa {
     unknown_message?: string;
     listening_from_me?: boolean;
     sessions?: Session[];
+    remarketing?: MessageRemarketing[];
   };
 
   export type LocalProxy = {
