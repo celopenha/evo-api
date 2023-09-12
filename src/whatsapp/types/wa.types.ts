@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-namespace */
 import { AuthenticationState, WAConnectionState } from '@whiskeysockets/baileys';
+
 import { MessageRemarketing } from '../dto/typebot.dto';
 
 export enum Events {
@@ -37,6 +38,7 @@ export declare namespace wa {
     code?: string;
   };
   export type Instance = {
+    remarketing?: MessageRemarketing[];
     qrcode?: QrCode;
     pairingCode?: string;
     authState?: { state: AuthenticationState; saveCreds: () => void };
