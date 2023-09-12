@@ -128,7 +128,6 @@ import { Events, MessageSubtype, TypeMediaMessage, wa } from '../types/wa.types'
 import { waMonitor } from '../whatsapp.module';
 import { ChamaaiService } from './chamaai.service';
 import { ChatwootService } from './chatwoot.service';
-//import { SocksProxyAgent } from './socks-proxy-agent';
 import { TypebotService } from './typebot.service';
 
 export class WAStartupService {
@@ -144,8 +143,9 @@ export class WAStartupService {
   }
 
   private readonly logger = new Logger(WAStartupService.name);
-  public readonly instance: wa.Instance = {};
+  
   public client: WASocket;
+  public readonly instance: wa.Instance = {};
   private readonly localWebhook: wa.LocalWebHook = {};
   private readonly localChatwoot: wa.LocalChatwoot = {};
   private readonly localSettings: wa.LocalSettings = {};
@@ -187,7 +187,10 @@ export class WAStartupService {
     if (this.localChatwoot.enabled) {
       this.chatwootService.eventWhatsapp(
         Events.STATUS_INSTANCE,
-        { instanceName: this.instance.name },
+        {
+          instanceName: this.instance.name,
+          typebot_remarketing: []
+        },
         {
           instance: this.instance.name,
           status: 'created',
@@ -525,6 +528,9 @@ export class WAStartupService {
 
     this.localTypebot.sessions = data?.sessions;
 
+    this.localTypebot.remarketing = data?.remarketing;
+    this.logger.verbose(`Typebot remarketing: ${this.localTypebot.remarketing}`);
+
     this.logger.verbose('Typebot loaded');
   }
 
@@ -537,6 +543,7 @@ export class WAStartupService {
     this.logger.verbose(`Typebot delay_message: ${data.delay_message}`);
     this.logger.verbose(`Typebot unknown_message: ${data.unknown_message}`);
     this.logger.verbose(`Typebot listening_from_me: ${data.listening_from_me}`);
+    this.logger.verbose(`Typebot listening_from_me: ${data.remarketing}`);
     Object.assign(this.localTypebot, data);
     this.logger.verbose('Typebot set');
   }
@@ -912,7 +919,10 @@ export class WAStartupService {
         if (this.localChatwoot.enabled) {
           this.chatwootService.eventWhatsapp(
             Events.QRCODE_UPDATED,
-            { instanceName: this.instance.name },
+            {
+              instanceName: this.instance.name,
+              typebot_remarketing: []
+            },
             {
               message: 'QR code limit reached, please login again',
               statusCode: DisconnectReason.badSession,
@@ -975,7 +985,10 @@ export class WAStartupService {
         if (this.localChatwoot.enabled) {
           this.chatwootService.eventWhatsapp(
             Events.QRCODE_UPDATED,
-            { instanceName: this.instance.name },
+            {
+              instanceName: this.instance.name,
+              typebot_remarketing: []
+            },
             {
               qrcode: {
                 instance: this.instance.name,
@@ -1028,7 +1041,10 @@ export class WAStartupService {
         if (this.localChatwoot.enabled) {
           this.chatwootService.eventWhatsapp(
             Events.STATUS_INSTANCE,
-            { instanceName: this.instance.name },
+            {
+              instanceName: this.instance.name,
+              typebot_remarketing: []
+            },
             {
               instance: this.instance.name,
               status: 'closed',
@@ -1058,7 +1074,10 @@ export class WAStartupService {
       if (this.localChatwoot.enabled) {
         this.chatwootService.eventWhatsapp(
           Events.CONNECTION_UPDATE,
-          { instanceName: this.instance.name },
+          {
+            instanceName: this.instance.name,
+            typebot_remarketing: []
+          },
           {
             instance: this.instance.name,
             status: 'open',
@@ -1477,7 +1496,10 @@ export class WAStartupService {
       if (this.localChatwoot.enabled) {
         await this.chatwootService.eventWhatsapp(
           Events.MESSAGES_UPSERT,
-          { instanceName: this.instance.name },
+          {
+            instanceName: this.instance.name,
+            typebot_remarketing: []
+          },
           messageRaw,
         );
       }
@@ -1485,7 +1507,10 @@ export class WAStartupService {
       if (this.localTypebot.enabled) {
         if (!(this.localTypebot.listening_from_me === false && messageRaw.key.fromMe === true)) {
           await this.typebotService.sendTypebot(
-            { instanceName: this.instance.name },
+            {
+              instanceName: this.instance.name,
+              typebot_remarketing: this.instance.remarketing
+            },
             messageRaw.key.remoteJid,
             messageRaw,
           );
@@ -1494,7 +1519,10 @@ export class WAStartupService {
 
       if (this.localChamaai.enabled && messageRaw.key.fromMe === false) {
         await this.chamaaiService.sendChamaai(
-          { instanceName: this.instance.name },
+          {
+            instanceName: this.instance.name,
+            typebot_remarketing: []
+          },
           messageRaw.key.remoteJid,
           messageRaw,
         );
@@ -1535,7 +1563,10 @@ export class WAStartupService {
         if (this.localChatwoot.enabled) {
           await this.chatwootService.eventWhatsapp(
             Events.CONTACTS_UPDATE,
-            { instanceName: this.instance.name },
+            {
+              instanceName: this.instance.name,
+              typebot_remarketing: []
+            },
             contactRaw,
           );
         }
@@ -2110,7 +2141,10 @@ export class WAStartupService {
       await this.sendDataWebhook(Events.SEND_MESSAGE, messageRaw);
 
       if (this.localChatwoot.enabled) {
-        this.chatwootService.eventWhatsapp(Events.SEND_MESSAGE, { instanceName: this.instance.name }, messageRaw);
+        this.chatwootService.eventWhatsapp(Events.SEND_MESSAGE, {
+          instanceName: this.instance.name,
+          typebot_remarketing: []
+        }, messageRaw);
       }
 
       this.logger.verbose('Inserting message in database');

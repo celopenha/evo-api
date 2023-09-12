@@ -1,3 +1,5 @@
+import { MessageRemarketing } from "./typebot.dto";
+
 export class InstanceDto {
   instanceName: string;
   qrcode?: boolean;
@@ -22,6 +24,7 @@ export class InstanceDto {
   websocket_events?: string[];
   rabbitmq_enabled?: boolean;
   rabbitmq_events?: string[];
+
   typebot_url?: string;
   typebot?: string;
   typebot_expire?: number;
@@ -29,6 +32,7 @@ export class InstanceDto {
   typebot_delay_message?: number;
   typebot_unknown_message?: string;
   typebot_listening_from_me?: boolean;
+  typebot_remarketing: MessageRemarketing[]
   proxy_enabled?: boolean;
   proxy_proxy?: string;
 }

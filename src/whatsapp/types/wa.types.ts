@@ -42,7 +42,6 @@ export declare namespace wa {
     authState?: { state: AuthenticationState; saveCreds: () => void };
     name?: string;
     wuid?: string;
-    profileName?: string;
     profilePictureUrl?: string;
   };
 
