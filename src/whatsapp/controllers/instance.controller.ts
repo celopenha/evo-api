@@ -33,7 +33,7 @@ export class InstanceController {
     private readonly rabbitmqService: RabbitmqService,
     private readonly typebotService: TypebotService,
     private readonly cache: RedisCache,
-  ) { }
+  ) {}
 
   private readonly logger = new Logger(InstanceController.name);
 
@@ -69,8 +69,7 @@ export class InstanceController {
     typebot_delay_message,
     typebot_unknown_message,
     typebot_listening_from_me,
-    typebot_remarketing
-
+    typebot_remarketing,
   }: InstanceDto) {
     try {
       this.logger.verbose('requested createInstance from ' + instanceName + ' instance');
@@ -91,7 +90,7 @@ export class InstanceController {
       const hash = await this.authService.generateHash(
         {
           instanceName: instance.instanceName,
-          typebot_remarketing: []
+          typebot_remarketing: [],
         },
         token,
       );
@@ -262,7 +261,7 @@ export class InstanceController {
             delay_message: typebot_delay_message,
             unknown_message: typebot_unknown_message,
             listening_from_me: typebot_listening_from_me,
-            remarketing: typebot_remarketing
+            remarketing: typebot_remarketing,
           });
         } catch (error) {
           this.logger.log(error);
@@ -321,7 +320,7 @@ export class InstanceController {
             delay_message: typebot_delay_message,
             unknown_message: typebot_unknown_message,
             listening_from_me: typebot_listening_from_me,
-            remarketing: typebot_remarketing
+            remarketing: typebot_remarketing,
           },
           settings,
           qrcode: getQrcode,
@@ -415,7 +414,7 @@ export class InstanceController {
           delay_message: typebot_delay_message,
           unknown_message: typebot_unknown_message,
           listening_from_me: typebot_listening_from_me,
-          remarketing: typebot_remarketing
+          remarketing: typebot_remarketing,
         },
         settings,
         chatwoot: {

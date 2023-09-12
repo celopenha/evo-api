@@ -143,7 +143,7 @@ export class WAStartupService {
   }
 
   private readonly logger = new Logger(WAStartupService.name);
-  
+
   public client: WASocket;
   public readonly instance: wa.Instance = {};
   private readonly localWebhook: wa.LocalWebHook = {};
@@ -189,7 +189,7 @@ export class WAStartupService {
         Events.STATUS_INSTANCE,
         {
           instanceName: this.instance.name,
-          typebot_remarketing: []
+          typebot_remarketing: [],
         },
         {
           instance: this.instance.name,
@@ -921,7 +921,7 @@ export class WAStartupService {
             Events.QRCODE_UPDATED,
             {
               instanceName: this.instance.name,
-              typebot_remarketing: []
+              typebot_remarketing: [],
             },
             {
               message: 'QR code limit reached, please login again',
@@ -987,7 +987,7 @@ export class WAStartupService {
             Events.QRCODE_UPDATED,
             {
               instanceName: this.instance.name,
-              typebot_remarketing: []
+              typebot_remarketing: [],
             },
             {
               qrcode: {
@@ -1043,7 +1043,7 @@ export class WAStartupService {
             Events.STATUS_INSTANCE,
             {
               instanceName: this.instance.name,
-              typebot_remarketing: []
+              typebot_remarketing: [],
             },
             {
               instance: this.instance.name,
@@ -1076,7 +1076,7 @@ export class WAStartupService {
           Events.CONNECTION_UPDATE,
           {
             instanceName: this.instance.name,
-            typebot_remarketing: []
+            typebot_remarketing: [],
           },
           {
             instance: this.instance.name,
@@ -1498,7 +1498,7 @@ export class WAStartupService {
           Events.MESSAGES_UPSERT,
           {
             instanceName: this.instance.name,
-            typebot_remarketing: []
+            typebot_remarketing: [],
           },
           messageRaw,
         );
@@ -1509,7 +1509,7 @@ export class WAStartupService {
           await this.typebotService.sendTypebot(
             {
               instanceName: this.instance.name,
-              typebot_remarketing: this.instance.remarketing
+              typebot_remarketing: this.instance.remarketing,
             },
             messageRaw.key.remoteJid,
             messageRaw,
@@ -1521,7 +1521,7 @@ export class WAStartupService {
         await this.chamaaiService.sendChamaai(
           {
             instanceName: this.instance.name,
-            typebot_remarketing: []
+            typebot_remarketing: [],
           },
           messageRaw.key.remoteJid,
           messageRaw,
@@ -1565,7 +1565,7 @@ export class WAStartupService {
             Events.CONTACTS_UPDATE,
             {
               instanceName: this.instance.name,
-              typebot_remarketing: []
+              typebot_remarketing: [],
             },
             contactRaw,
           );
@@ -1931,17 +1931,17 @@ export class WAStartupService {
 
   public async fetchProfile(instanceName: string, number?: string) {
     const jid = number ? this.createJid(number) : this.client?.user?.id;
-  
+
     this.logger.verbose('Getting profile with jid: ' + jid);
     try {
       this.logger.verbose('Getting profile info');
-  
+
       if (number) {
         const info = (await this.whatsappNumber({ numbers: [jid] }))?.shift();
         const picture = await this.profilePicture(info?.jid);
         const status = await this.getStatus(info?.jid);
         const business = await this.fetchBusinessProfile(info?.jid);
-  
+
         return {
           wuid: info?.jid || jid,
           name: info?.name,
@@ -2141,10 +2141,14 @@ export class WAStartupService {
       await this.sendDataWebhook(Events.SEND_MESSAGE, messageRaw);
 
       if (this.localChatwoot.enabled) {
-        this.chatwootService.eventWhatsapp(Events.SEND_MESSAGE, {
-          instanceName: this.instance.name,
-          typebot_remarketing: []
-        }, messageRaw);
+        this.chatwootService.eventWhatsapp(
+          Events.SEND_MESSAGE,
+          {
+            instanceName: this.instance.name,
+            typebot_remarketing: [],
+          },
+          messageRaw,
+        );
       }
 
       this.logger.verbose('Inserting message in database');

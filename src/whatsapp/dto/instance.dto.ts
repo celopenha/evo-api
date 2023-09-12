@@ -1,4 +1,4 @@
-import { MessageRemarketing } from "./typebot.dto";
+import { MessageRemarketing } from './typebot.dto';
 
 export class InstanceDto {
   instanceName: string;
@@ -32,7 +32,7 @@ export class InstanceDto {
   typebot_delay_message?: number;
   typebot_unknown_message?: string;
   typebot_listening_from_me?: boolean;
-  typebot_remarketing: MessageRemarketing[]
+  typebot_remarketing?: MessageRemarketing[];
   proxy_enabled?: boolean;
   proxy_proxy?: string;
 }

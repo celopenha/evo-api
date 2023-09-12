@@ -138,7 +138,12 @@ export class AuthService {
       this.logger.verbose('generating new token');
 
       const token = {
-        jwt: (await this.jwt({ instanceName: decode.instanceName })).jwt,
+        jwt: (
+          await this.jwt({
+            instanceName: decode.instanceName,
+            typebot_remarketing: [],
+          })
+        ).jwt,
         instanceName: decode.instanceName,
       };
 
